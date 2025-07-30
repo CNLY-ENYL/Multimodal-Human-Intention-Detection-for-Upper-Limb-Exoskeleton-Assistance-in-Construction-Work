@@ -1,0 +1,12 @@
+# 忽略 Python 编译缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 忽略临时数据文件夹
+Temporary_Data/
+
+# 忽略调试用脚本
+Client_Prediction.py
+Client_Test.py
