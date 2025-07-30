@@ -13,13 +13,6 @@ class HARDataSet(Dataset):
         self.sequence_length = sequence_length
         self.samples = []
 
-        # Define SampleNumber once
-        if self.samples:
-            first_image_path = self.samples[0][0][0]
-            self.SampleNumber = os.path.basename(os.path.dirname(first_image_path))
-        else:
-            self.SampleNumber = ''
-
         for sample_name in os.listdir(root_dir):
             sample_path = os.path.join(root_dir, sample_name)
             if not os.path.isdir(sample_path):
@@ -36,11 +29,17 @@ class HARDataSet(Dataset):
             if len(frames) >= sequence_length:
                 for i in range(0, len(frames) - sequence_length + 1):
                     self.samples.append((frames[i:i + sequence_length], imu_path, i))
-
-
+            
+        # Define SampleNumber once
+        if self.samples:
+            first_image_path = self.samples[0][0][0]
+            self.SampleNumber = os.path.basename(os.path.dirname(first_image_path))
+        else:
+            self.SampleNumber = ''
 
     def __len__(self):
         return len(self.samples)
+
 
     def __getitem__(self, idx):
         try:

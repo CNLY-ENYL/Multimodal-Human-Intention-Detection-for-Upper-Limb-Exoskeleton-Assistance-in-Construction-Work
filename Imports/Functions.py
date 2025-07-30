@@ -394,11 +394,8 @@ def detect_tools_with_fusion_check(yolo_model, video_frames, fusion_label):
     else:
         most_common_tool = "None"
 
-    # Fusion check
-    if "Bimanual" in fusion_label and most_common_tool != "long roller":
-        print("Detected bimanual action → Providing long roller equivalent torque support")
-
-    return most_common_tool
+    needs_support = "Bimanual" in fusion_label and most_common_tool != "long roller"
+    return most_common_tool, needs_support
 
 
 if __name__ == '__main__' :

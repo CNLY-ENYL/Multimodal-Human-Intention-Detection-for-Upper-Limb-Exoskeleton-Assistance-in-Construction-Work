@@ -22,6 +22,7 @@ prediction_threshold = 3                            # how much prediction we nee
 import os
 import sys
 import time
+import traceback
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 
 try :
@@ -48,13 +49,12 @@ def make_prediction(Dataset):
         for video_frames, imu_data in Loader:
             video_frames, imu_data = video_frames.to(device), imu_data.to(device)
             predicted = torch.argmax(model(video_frames, imu_data))
+            predicted_label = idx_to_action[predicted.item()]
 
             from Imports.Functions import detect_tools_with_fusion_check
-            final_tool = detect_tools_with_fusion_check(yolo_model, video_frames, predicted_label)
+            final_tool, needs_support = detect_tools_with_fusion_check(yolo_model, video_frames, predicted_label)
 
-            print(f"Final detected tool (majority): {final_tool}")
-                
-    return predicted
+    return predicted, final_tool, needs_support
 
 LINE_UP = '\033[1A'
 LINE_CLEAR = '\x1b[2K'
@@ -119,7 +119,6 @@ model.load_state_dict(torch.load(ModelToLoad_Path, weights_only = True, map_loca
 model.to(device)
 model.eval()
 
-print("Models loaded successfully. Starting to read data samples...\n")
 
 
 try : # Main Loop
@@ -137,15 +136,29 @@ try : # Main Loop
             dataset = HARDataSet(root_dir=root_directory, transform=transform)
         old_sample = dataset.SampleNumber
 
-        try :
-            prediction = make_prediction(dataset)
+        try:
+            prediction, final_tool, needs_support = make_prediction(dataset)
         except Exception as e:
             print(f'Error on {old_sample}')
+            traceback.print_exc()
             continue  
-        label = idx_to_action.get(prediction.item(), "Rest")
+
+        if prediction is not None:
+            label = idx_to_action.get(prediction.item(), "Rest")
+        else:
+            label = "Rest"
+
         tracking[prediction] += 1
-        print(f'{old_sample} : {label} at {round(time.time()-Start_Tracking_Time,2)}')
-        if first_sample == '' : first_sample = old_sample
+
+        # print two labels
+        if needs_support:
+            print("Detected bimanual action -> Providing long roller equivalent torque support")
+
+
+        print(f'{old_sample} : {label} | Tool: {final_tool} at {round(time.time()-Start_Tracking_Time,2)}')
+
+        if first_sample == '':
+            first_sample = old_sample
 
 
 except KeyboardInterrupt:
