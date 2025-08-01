@@ -242,48 +242,49 @@ try : # try except is to ignore the keyboard interrupt error
         # We create a folder with a csv file in it( csv with rotation matrix)
         folder = f"{root_directory}/Sample_{sample_counter}"
         os.makedirs(folder)
-        csv_file = open(f"{folder}/imu.csv", 'w', newline='')
-        writer = csv.writer(csv_file)
-        #based on that caculate new csv with joint angle
-        csv_file.close()
-        process_imu_to_new(folder)
+        #csv_file = open(f"{folder}/imu.csv", 'w', newline='')
+        with open(f"{folder}/imu.csv", 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            #based on that caculate new csv with joint angle
+            #csv_file.close()
 
-        for i in range(sequence_length):
-            frames_counter += 1
-            while time() - Start_Time < frames_counter / fps:
-                sleep(0.001)
+            for i in range(sequence_length):
+                frames_counter += 1
+                while time() - Start_Time < frames_counter / fps:
+                    sleep(0.001)
 
-            row = []
-            for imu_id in IMU_IDS:
-                row += imu_data[imu_id]["gyr"] + imu_data[imu_id]["acc"] + sum(imu_data[imu_id]["rotm"], [])
-            writer.writerow(row)
+                row = []
+                for imu_id in IMU_IDS:
+                    row += imu_data[imu_id]["gyr"] + imu_data[imu_id]["acc"] + sum(imu_data[imu_id]["rotm"], [])
+                writer.writerow(row)
 
-            if NEW_CAM :
-                # ret, frame = cap.read() 
-                bgr_pixels, frame_datetime = device.receive_scene_video_frame()
-                # ret = 
-                frame = bgr_pixels # TODO Possible source of error, check conversion
-            else :
-                ret, frame = cap.read()
-                if not ret: # If camera is unavailable :
-                    # Release resources
-                    cap.release()
-                    cv2.destroyAllWindows()
-                    csv_file.close()
-                    for connection in connections:
-                        connection.close()
-                    print('\nCamera disconnected')
-                    raise KeyboardInterrupt
+                if NEW_CAM :
+                    # ret, frame = cap.read() 
+                    bgr_pixels, frame_datetime = device.receive_scene_video_frame()
+                    # ret = 
+                    frame = bgr_pixels # TODO Possible source of error, check conversion
+                else :
+                    ret, frame = cap.read()
+                    if not ret: # If camera is unavailable :
+                        # Release resources
+                        cap.release()
+                        cv2.destroyAllWindows()
+                        csv_file.close()
+                        for connection in connections:
+                            connection.close()
+                        print('\nCamera disconnected')
+                        raise KeyboardInterrupt
 
-            if PRINT_IMU:
-                #print(f"Frame {frames_counter}, Sample {sample_counter}")
-                if frames_counter%window_size == 0 :
-                    print('\033c'+message)
+                if PRINT_IMU:
+                    #print(f"Frame {frames_counter}, Sample {sample_counter}")
+                    if frames_counter%window_size == 0 :
+                        print('\033c'+message)
 
-            # Add image
-            cv2.imwrite(f"{folder}/frame_{frames_counter}.jpg", frame)
+                # Add image
+                cv2.imwrite(f"{folder}/frame_{frames_counter}.jpg", frame)
 
         #csv_file.close()
+        process_imu_to_new(folder)
 
         # We delete the folders as we go so that we don't saturate
         if sample_counter > buffer:
