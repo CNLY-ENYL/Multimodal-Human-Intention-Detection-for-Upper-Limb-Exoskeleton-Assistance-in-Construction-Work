@@ -5,6 +5,8 @@ It uses two pre-trained models:
 - **YOLO** model for detecting painting tools and hands.
 - **MoViNet + LSTM fusion model** for recognizing user actions based on both video frames and IMU data.  
 
+<img width="1186" height="670" alt="Fusion" src="https://github.com/user-attachments/assets/4c4fbc0b-12a5-4260-8239-66652c740546" />
+
 Both models are trained on a custom **Paint Database** (link :).  
 The system outputs:
 - **Action label:** one of 10 classes (e.g., `Bimanual_Up`, `Bimanual_Right`, `Unimanual_Down`, `Prepare`).
